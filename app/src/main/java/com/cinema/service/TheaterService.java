@@ -21,8 +21,8 @@ public class TheaterService {
     }
 
     public StateSeat[][] getStateSeats(Room room){
-        rows = getLenghtRowsAndColumnsFromRoom(room)[0];
-        columns = getLenghtRowsAndColumnsFromRoom(room)[1];
+        rows = room.getSeats().length;
+        columns = room.getSeats()[0].length;
         StateSeat[][] stateSeats = new StateSeat[rows][columns];
         for(int i = 0; i < rows; i++){
             for(int j = 0; j < columns; j++){
@@ -32,23 +32,17 @@ public class TheaterService {
         return stateSeats;
     }
 
-    public Integer[] getLenghtRowsAndColumnsFromRoom(Room room){
-        Integer[] rowsAndColumnsFromRoom = new Integer[2];
-        rowsAndColumnsFromRoom[0] = room.getSeats().length; //Obtengo filas
-        rowsAndColumnsFromRoom[1] = room.getSeats()[0].length; //Obtengo columnas
-        return rowsAndColumnsFromRoom;
-    }
 
     public boolean reserveASeat(Room room, Integer row, Integer column){
-        rows = getLenghtRowsAndColumnsFromRoom(room)[0];
-        columns = getLenghtRowsAndColumnsFromRoom(room)[1];
+        rows = room.getSeats().length;
+        columns = room.getSeats()[0].length;
         seats = room.getSeats();
         row--;
         column--;
-        if(row < 0 || column < 0){
+        if(row < 0 || row > rows){
             throw new InvalidSeatException("No se debe ingresar valores negativos.");
         }
-        if(row > rows || column > columns){
+        if(column < 0 || column > columns){
             throw new InvalidSeatException("No existe la silla mencionada en la sala.");
         }
         if(seats[row][column].isSeatFree()){
@@ -60,13 +54,15 @@ public class TheaterService {
     }
 
     public boolean cancelSeatReservation(Room room, Integer row, Integer column){
-        rows = getLenghtRowsAndColumnsFromRoom(room)[0];
-        columns = getLenghtRowsAndColumnsFromRoom(room)[1];
+        rows = room.getSeats().length;
+        columns = room.getSeats()[0].length;
         seats = room.getSeats();
-        if(row < 0 || column < 0){
+        row--;
+        column--;
+        if(row < 0 || row > rows){
             throw new InvalidSeatException("No se debe ingresar valores negativos.");
         }
-        if(row > rows || column > columns){
+        if(column < 0 || column > columns){
             throw new InvalidSeatException("No existe la silla mencionada en la sala.");
         }
         if(!seats[row][column].isSeatFree()){
@@ -82,8 +78,8 @@ public class TheaterService {
         Integer numberOfSeatsOccupied = 0;
         Double percentageOfRoomOccupancy;
         Integer totalNumberOfSeats;
-        rows = getLenghtRowsAndColumnsFromRoom(room)[0];
-        columns = getLenghtRowsAndColumnsFromRoom(room)[1];
+        rows = room.getSeats().length;
+        columns = room.getSeats()[0].length;
         seats = room.getSeats();
         for(int i = 0; i < rows; i++){
             for(int j = 0; j < columns; j++){

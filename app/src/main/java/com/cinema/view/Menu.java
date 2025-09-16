@@ -1,5 +1,9 @@
 package com.cinema.view;
 
+import com.cinema.infra.exception.BusySeatException;
+import com.cinema.infra.exception.FreeSeatException;
+import com.cinema.infra.exception.InvalidRoomException;
+import com.cinema.infra.exception.InvalidSeatException;
 import com.cinema.model.dto.TheaterRegistrationData;
 import com.cinema.model.entitie.Room;
 import com.cinema.model.entitie.Theater;
@@ -41,6 +45,7 @@ public class Menu {
     }
 
     public void programTheaterFlowInteraction(Scanner keyboard, Theater theater){
+        Integer[] positionSeat;
         while (!exit) {
             String menuApp = String.format("""
             \nBienvenido al teatro %s.
@@ -62,31 +67,48 @@ public class Menu {
                     System.out.println(Arrays.toString(rooms));
                     break;
                 case 2:
-                    room = selectARoom(keyboard, theater);
-                    var stateSeats = service.getStateSeats(room);
-                    System.out.println(Arrays.deepToString(stateSeats));
+                    try {
+                        room = selectARoom(keyboard, theater);
+                        var stateSeats = service.getStateSeats(room);
+                        System.out.println(Arrays.deepToString(stateSeats));
+                    } catch (InvalidRoomException ex){
+                        System.out.println("Error: "+ ex.getMessage());
+                    }
                     break;
                 case 3:
-                    room = selectARoom(keyboard, theater);
-                    Integer[] positionSeat = getPositionsSeat(keyboard);
-                    row = positionSeat[0];
-                    column = positionSeat[1];
-                    String successfulReservation = service.reserveASeat(room, row, column) ? "¡Reserva exitosa!" : "Reserva denegada.";
-                    System.out.println(successfulReservation);
+                    try{
+                        room = selectARoom(keyboard, theater);
+                        positionSeat = getPositionsSeat(keyboard, room);
+                        row = positionSeat[0];
+                        column = positionSeat[1];
+                        String successfulReservation = service.reserveASeat(room, row, column) ? "¡Reserva exitosa!" : "Reserva denegada.";
+                        System.out.println(successfulReservation);
+                    } catch (InvalidSeatException | BusySeatException | InvalidRoomException ex){
+                        System.out.println("Error: " + ex.getMessage());
+                    }
                     break;
                 case 4:
-                    room = selectARoom(keyboard, theater);
-                    positionSeat = getPositionsSeat(keyboard);
-                    row = positionSeat[0];
-                    column = positionSeat[1];
-                    String successfulReservationCancellation = service.cancelSeatReservation(room, row, column)
-                            ? "Reserva cancelada con éxito." : "No pudo ser cancelada la reserva";
-                    System.out.println(successfulReservationCancellation);
+                    try {
+                        room = selectARoom(keyboard, theater);
+                        positionSeat = getPositionsSeat(keyboard, room);
+                        row = positionSeat[0];
+                        column = positionSeat[1];
+                        String successfulReservationCancellation = service.cancelSeatReservation(room, row, column)
+                                ? "Reserva cancelada con éxito." : "No pudo ser cancelada la reserva";
+                        System.out.println(successfulReservationCancellation);
+                    } catch (InvalidSeatException | FreeSeatException | InvalidRoomException ex){
+                        System.out.println("Error: "+ ex.getMessage());
+                    }
                     break;
                 case 5:
-                    room = selectARoom(keyboard, theater);
-                    var stateRoomStatistics = service.getRoomStatistics(room);
-                    System.out.println(stateRoomStatistics);
+                    try{
+                        room = selectARoom(keyboard, theater);
+                        var stateRoomStatistics = service.getRoomStatistics(room);
+                        System.out.println(stateRoomStatistics);
+                    } catch (InvalidRoomException ex){
+                        System.out.println("Error: "+ ex.getMessage());
+                    }
+
                     break;
                 case 6:
                     System.out.println("Gracias por su visita. Saliendo el programa...");
@@ -104,20 +126,25 @@ public class Menu {
         Integer numberRoom = keyboard.nextInt();
         keyboard.nextLine();
         if(numberRoom <= 0 || numberRoom > theater.getRooms().length){
-            System.out.println("Sala no válida.");
-            throw new IllegalArgumentException("Error, sala no válida.");
+            throw new InvalidRoomException("Error, sala no válida.");
         }
         return theater.getRooms()[numberRoom-1];
     }
 
-    public Integer[] getPositionsSeat(Scanner keyboard){
+    public Integer[] getPositionsSeat(Scanner keyboard, Room room){
         Integer[] positionSeat = new Integer[2];
         System.out.println("Digite la fila en la que está ubicado el asiento: ");
         Integer row = keyboard.nextInt();
         keyboard.nextLine();
+        if(row <= 0 || row > room.getSeats().length){
+            throw new InvalidSeatException("Asiento no disponible, desbordamiento en capacidad de sala.");
+        }
         System.out.println("Digite la columna en la que está ubicado el asiento: ");
         Integer column = keyboard.nextInt();
         keyboard.nextLine();
+        if(column <= 0 || column > room.getSeats()[0].length){
+            throw new InvalidSeatException("Asiento no disponible, desbordamiento en capacidad de sala.");
+        }
         positionSeat[0] = row;
         positionSeat[1] = column;
 
