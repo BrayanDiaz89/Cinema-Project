@@ -1,5 +1,7 @@
 package com.cinema.infra.exception;
 
-public class InvalidSeatException {
-    
+public class InvalidSeatException extends RuntimeException{
+    public InvalidSeatException(String message){
+        super(message);
+    }
 }
